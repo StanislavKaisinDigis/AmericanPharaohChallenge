@@ -1,70 +1,9 @@
-import React, { FC, useEffect, useRef } from 'react';
-
+import React, { FC, useEffect, useMemo, useRef } from 'react';
 import Tabs from '@mui/material/Tabs';
 import Box from '@mui/material/Box';
-import { styled } from '@mui/system';
 import TabsUnstyled from '@mui/base/TabsUnstyled';
-import TabsListUnstyled from '@mui/base/TabsListUnstyled';
-import TabPanelUnstyled from '@mui/base/TabPanelUnstyled';
-import { buttonUnstyledClasses } from '@mui/base/ButtonUnstyled';
-import TabUnstyled, { tabUnstyledClasses } from '@mui/base/TabUnstyled';
-
+import { Tab } from '../../components/Tab';
 import { mockdata } from '../../api/mockData/mockdata';
-
-const Tab = styled(TabUnstyled)`
-  font-family: IBM Plex Sans, sans-serif;
-  color: white;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: bold;
-  background-color: #0b4c8c;
-  width: 100%;
-  padding: 12px 16px;
-  margin: 6px 6px;
-  border: none;
-  border-radius: 5px;
-  display: flex;
-  justify-content: center;
-
-  &:hover {
-    background-color: #f4b93b;
-  }
-
-  &:focus {
-    color: #fff;
-    border-radius: 3px;
-    // outline: 2px solid #F4B93B;
-    outline-offset: 2px;
-    background-color: #f4b93b;
-  }
-
-  &.${tabUnstyledClasses.selected} {
-    background-color: #f4b93b;
-    color: white;
-  }
-
-  &.${buttonUnstyledClasses.disabled} {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
-const TabPanel = styled(TabPanelUnstyled)`
-  width: 100%;
-  font-family: IBM Plex Sans, sans-serif;
-  font-size: 0.875rem;
-`;
-
-const TabsList = styled(TabsListUnstyled)`
-  min-width: 320px;
-  background-color: #0b4c8c;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-content: space-between;
-`;
 
 function a11yProps(index: number) {
   return {
@@ -97,7 +36,6 @@ export const Home: FC = () => {
     setValue(newValue);
   };
 
-  //process data: split into slots
   const getTeeSlot = (item: ImockDataItem) => {
     const teaSlotHours = item.tee_time.split(':')[0];
     const teaSlotMinutes = item.tee_time.split(':')[1];
@@ -108,22 +46,28 @@ export const Home: FC = () => {
     ].join(':');
     return teaSlot;
   };
-  const sorted = mockdata.reduce((acc: Iacc, item: ImockDataItem) => {
-    const teaSlot = getTeeSlot(item);
-    if (!acc.hasOwnProperty(teaSlot)) {
-      Object.defineProperty(acc, teaSlot, { value: [], enumerable: true });
-    }
-    acc[teaSlot].push(item);
-    return acc;
-  }, {});
 
-  //process data: prepare for rendering
-  const lastTeaSlot = getTeeSlot(mockdata[mockdata.length - 1]);
-  const teeSlotsSortedByTime = Object.keys(sorted).sort();
-  const timeSlotsSortedByLast = [
-    ...teeSlotsSortedByTime.slice(teeSlotsSortedByTime.indexOf(lastTeaSlot)),
-    ...teeSlotsSortedByTime.slice(0, teeSlotsSortedByTime.indexOf(lastTeaSlot)),
-  ];
+  const { sorted, timeSlotsSortedByLast } = useMemo(() => {
+    //process data: split into slots
+    const sorted = mockdata.reduce((acc: Iacc, item: ImockDataItem) => {
+      const teaSlot = getTeeSlot(item);
+      if (!acc.hasOwnProperty(teaSlot)) {
+        Object.defineProperty(acc, teaSlot, { value: [], enumerable: true });
+      }
+      acc[teaSlot].push(item);
+      return acc;
+    }, {});
+    //process data: prepare for rendering
+    const lastTeaSlot = getTeeSlot(mockdata[mockdata.length - 1]);
+    const teeSlotsSortedByTime = Object.keys(sorted).sort();
+    const timeSlotsSortedByLast = [
+      ...teeSlotsSortedByTime.slice(teeSlotsSortedByTime.indexOf(lastTeaSlot)),
+      ...teeSlotsSortedByTime.slice(0, teeSlotsSortedByTime.indexOf(lastTeaSlot)),
+    ];
+
+    return { sorted, teeSlotsSortedByTime, timeSlotsSortedByLast };
+  }, [mockdata]);
+
   const currentTeeTimeSlot = timeSlotsSortedByLast[value];
 
   return (
@@ -159,7 +103,7 @@ export const Home: FC = () => {
       </Box>
       <div className="carousel" ref={carousel}>
         {sorted[currentTeeTimeSlot].length &&
-          sorted[currentTeeTimeSlot].reverse().map((item: ImockDataItem, index, array) => {
+          sorted[currentTeeTimeSlot].reverse().map((item: ImockDataItem) => {
             return (
               <a
                 className="carousel-item"
