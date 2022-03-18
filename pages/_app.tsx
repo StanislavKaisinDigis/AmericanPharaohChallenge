@@ -1,12 +1,14 @@
-import '../styles/globals.css'
-import type { AppProps } from 'next/app'
+import '../styles/globals.css';
+import 'materialize-css/dist/css/materialize.min.css';
 
-const  MyApp = ({ Component, pageProps }: AppProps)=>{
+import type { AppProps } from 'next/app';
+
+const MyApp = ({ Component, pageProps }: AppProps) => {
   const isWindow = typeof window !== 'undefined';
-  if(!isWindow){
-    return null
+  if (!isWindow) {
+    return null;
   }
-  return <Component {...pageProps} />
-}
+  return <Component {...pageProps} />;
+};
 
-export default MyApp
+export default MyApp;
